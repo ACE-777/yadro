@@ -2,7 +2,7 @@ package pkg
 
 import (
 	"errors"
-	"fmt"
+	"log"
 	"os"
 	"strings"
 )
@@ -14,12 +14,12 @@ var (
 
 func CheckArgs() (file string) {
 	if len(os.Args) != 2 {
-		fmt.Printf("Error: %v %v\r\n", invalidNumberOfArgs, os.Args)
+		log.Printf("Error: %v %v\r\n", invalidNumberOfArgs, os.Args)
 		os.Exit(1)
 	}
 
 	if !strings.Contains(os.Args[1], ".txt") {
-		fmt.Printf("Error: %v: %v\r\n", invalidFileFormat, os.Args[1])
+		log.Printf("Error: %v: %v\r\n", invalidFileFormat, os.Args[1])
 		os.Exit(1)
 	}
 

@@ -24,12 +24,17 @@ func checkDataOfFile(dataOfFile string) (string, error) {
 
 	//first 3 lines check
 	numberOfTables, err := strconv.Atoi(lines[0])
-	if err != nil && numberOfTables < 1 {
+	if err != nil || numberOfTables < 1 {
 		return lines[0], badFormatOfLine
 	}
 
+	secondLine := strings.Split(lines[1], " ")
+	if len(secondLine) != 2 || len(secondLine[0]) != 5 || len(secondLine[1]) != 5 {
+		return lines[1], badFormatOfLine
+	}
+
 	price, err := strconv.Atoi(lines[2])
-	if err != nil && price < 1 {
+	if err != nil || price < 1 {
 		return lines[2], badFormatOfLine
 	}
 
@@ -38,7 +43,7 @@ func checkDataOfFile(dataOfFile string) (string, error) {
 	//others lines check
 	//var wg sync.WaitGroup
 
-	for i := 3; i <= len(lines); i++ {
+	for i := 3; i < len(lines); i++ {
 		//wg.Add(1)
 		//i := i
 		//go func() {
