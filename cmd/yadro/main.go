@@ -6,5 +6,4 @@ import (
 
 func main() {
 	pkg.Parse(pkg.CheckArgs())
-
 }
