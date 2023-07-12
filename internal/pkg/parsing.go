@@ -26,7 +26,7 @@ type FinalProfit struct {
 	profit    int
 }
 
-func Parse(file string) {
+func Parse(file string) string {
 	var (
 		isClientInTheClub     map[string]bool
 		clientsNumberOfTables map[string]string
@@ -222,10 +222,17 @@ func Parse(file string) {
 			RemainsClients[nameOfRemainClient].name))
 	}
 
-	builder.WriteString(fmt.Sprintf("%v", closeTime.Format("15:04")))
+	builder.WriteString(fmt.Sprintf("%v\r\n", closeTime.Format("15:04")))
 
-	fmt.Println(builder.String())
 	for key, value := range ProfitOfTables {
-		fmt.Println(key, " ", value.profit, " ", value.wholeTime)
+		builder.WriteString(fmt.Sprintf("%v %v %v \r\n", key, value.profit, outputTime(value.wholeTime)))
 	}
+
+	return builder.String()
+}
+
+func outputTime(input float64) string {
+	hours := int(input)
+	minutes := int(math.Round((input - float64(hours)) * 60))
+	return fmt.Sprintf("%02d:%02d", hours, minutes)
 }

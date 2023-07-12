@@ -1,9 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"yadro/internal/pkg"
 )
 
 func main() {
-	pkg.Parse(pkg.CheckArgs())
+	fmt.Println(pkg.Parse(pkg.CheckArgs()))
 }
