@@ -222,11 +222,10 @@ func Parse(file string) {
 			RemainsClients[nameOfRemainClient].name))
 	}
 
-	fmt.Println(price, "\r\n")
 	builder.WriteString(fmt.Sprintf("%v", closeTime.Format("15:04")))
 
 	fmt.Println(builder.String())
 	for key, value := range ProfitOfTables {
-		fmt.Println("key: ", key, "value :", value)
+		fmt.Println(key, " ", value.profit, " ", value.wholeTime)
 	}
 }
