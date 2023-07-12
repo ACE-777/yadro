@@ -1,16 +1,10 @@
 package pkg
 
 import (
-	"errors"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
-)
-
-var (
-	invalidNumberOfLines = errors.New("No required lines in file")
-	BadFormatOfLine      = errors.New("Bad format of file on line:")
 )
 
 func checkPattern(input string, typeOfCheck string) bool {

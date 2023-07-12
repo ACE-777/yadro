@@ -1,15 +1,9 @@
 package pkg
 
 import (
-	"errors"
 	"log"
 	"os"
 	"strings"
-)
-
-var (
-	invalidNumberOfArgs = errors.New("invalid number of arguments in command line")
-	invalidFileFormat   = errors.New("file must has \"txt\" format")
 )
 
 func CheckArgs() (file string) {

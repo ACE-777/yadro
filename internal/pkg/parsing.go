@@ -6,6 +6,7 @@ import (
 	"math"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -24,18 +25,10 @@ type Clients struct {
 type FinalProfit struct {
 	wholeTime float64
 	profit    int
+	IDOfTable int
 }
 
 func Parse(file string) string {
-	var (
-		isClientInTheClub     map[string]bool
-		clientsNumberOfTables map[string]string
-		tables                map[string]SpotOfTable
-		ProfitOfTables        map[string]FinalProfit
-
-		que []string
-	)
-
 	dataOfFile, err := os.ReadFile("internal/pkg/testFile/" + file)
 	if err != nil {
 		log.Println(err)
@@ -50,6 +43,81 @@ func Parse(file string) string {
 
 	builder := strings.Builder{}
 	builder.WriteString(fmt.Sprintf("%v\r\n", openTime.Format("15:04")))
+
+	isClientInTheClub, clientsNumberOfTables, tables, ProfitOfTables :=
+		makingOutputFromThirdLine(lines, &builder, numberOfTables, openTime, price)
+
+	clientRemainsInClub := 0
+	RemainsClients := []Clients{}
+	for client, isInTheClub := range isClientInTheClub {
+		if isInTheClub {
+			finalProfit := FinalProfit{
+				profit:    ProfitOfTables[clientsNumberOfTables[client]].profit + int(math.Ceil(closeTime.Sub(tables[clientsNumberOfTables[client]].timeStart).Hours()))*price,
+				wholeTime: ProfitOfTables[clientsNumberOfTables[client]].wholeTime + closeTime.Sub(tables[clientsNumberOfTables[client]].timeStart).Hours(),
+			}
+			ProfitOfTables[clientsNumberOfTables[client]] = finalProfit
+
+			RemainsClients = append(RemainsClients, Clients{clientRemainsInClub, client})
+			clientRemainsInClub++
+		}
+	}
+
+	sort.Slice(RemainsClients, func(i, j int) bool {
+		return RemainsClients[i].name < RemainsClients[j].name
+	})
+
+	for nameOfRemainClient := range RemainsClients {
+		builder.WriteString(fmt.Sprintf("%v %v %v\r\n", closeTime.Format("15:04"), "11",
+			RemainsClients[nameOfRemainClient].name))
+	}
+
+	builder.WriteString(fmt.Sprintf("%v\r\n", closeTime.Format("15:04")))
+
+	builder = sortingProfitInfo(ProfitOfTables, &builder)
+
+	return builder.String()
+}
+
+func outputTime(input float64) string {
+	hours := int(input)
+	minutes := int(math.Round((input - float64(hours)) * 60))
+	return fmt.Sprintf("%02d:%02d", hours, minutes)
+}
+
+func sortingProfitInfo(ProfitOfTables map[string]FinalProfit, builder *strings.Builder) strings.Builder {
+	var finalProfitArray []FinalProfit
+	for key, value := range ProfitOfTables {
+		IDOfTable, _ := strconv.Atoi(key)
+		finalProfitArray = append(finalProfitArray, FinalProfit{value.wholeTime, value.profit, IDOfTable})
+	}
+
+	sort.Slice(finalProfitArray, func(i, j int) bool {
+		return finalProfitArray[i].IDOfTable < finalProfitArray[j].IDOfTable
+	})
+
+	for k := range finalProfitArray {
+		if k == len(finalProfitArray)-1 {
+			builder.WriteString(fmt.Sprintf("%v %v %v", finalProfitArray[k].IDOfTable,
+				finalProfitArray[k].profit, outputTime(finalProfitArray[k].wholeTime)))
+			break
+		}
+
+		builder.WriteString(fmt.Sprintf("%v %v %v \r\n", finalProfitArray[k].IDOfTable,
+			finalProfitArray[k].profit, outputTime(finalProfitArray[k].wholeTime)))
+	}
+
+	return *builder
+}
+
+func makingOutputFromThirdLine(lines []string, builder *strings.Builder, numberOfTables int, openTime time.Time, price int) (map[string]bool, map[string]string, map[string]SpotOfTable, map[string]FinalProfit) {
+	var (
+		isClientInTheClub     map[string]bool
+		clientsNumberOfTables map[string]string
+		tables                map[string]SpotOfTable
+		ProfitOfTables        map[string]FinalProfit
+
+		que []string
+	)
 
 	isClientInTheClub = make(map[string]bool)
 	tables = make(map[string]SpotOfTable)
@@ -106,7 +174,8 @@ func Parse(file string) string {
 				continue
 			}
 
-			if tables[clientsNumberOfTables[currentLine[2]]].busy {
+			IDTable := clientsNumberOfTables[currentLine[2]]
+			if tables[IDTable].busy {
 				table := SpotOfTable{
 					client:    currentLine[2],
 					timeStart: timeOfCurrentLine,
@@ -114,13 +183,12 @@ func Parse(file string) string {
 				}
 
 				finalProfit := FinalProfit{
-					profit:    ProfitOfTables[clientsNumberOfTables[currentLine[2]]].profit + int(math.Ceil(timeOfCurrentLine.Sub(tables[clientsNumberOfTables[currentLine[2]]].timeStart).Hours()))*price,
-					wholeTime: timeOfCurrentLine.Sub(tables[clientsNumberOfTables[currentLine[2]]].timeStart).Hours(),
+					profit:    ProfitOfTables[IDTable].profit + int(math.Ceil(timeOfCurrentLine.Sub(tables[IDTable].timeStart).Hours()))*price,
+					wholeTime: ProfitOfTables[IDTable].wholeTime + timeOfCurrentLine.Sub(tables[IDTable].timeStart).Hours(),
 				}
 
-				ProfitOfTables[clientsNumberOfTables[currentLine[2]]] = finalProfit
-
-				tables[clientsNumberOfTables[currentLine[2]]] = table
+				ProfitOfTables[IDTable] = finalProfit
+				tables[IDTable] = table
 			}
 
 			table := SpotOfTable{
@@ -165,12 +233,13 @@ func Parse(file string) string {
 
 			isClientInTheClub[currentLine[2]] = false
 
+			IDTable := clientsNumberOfTables[currentLine[2]]
 			finalProfit := FinalProfit{
-				profit:    ProfitOfTables[clientsNumberOfTables[currentLine[2]]].profit + int(math.Ceil(timeOfCurrentLine.Sub(tables[clientsNumberOfTables[currentLine[2]]].timeStart).Hours()))*price,
-				wholeTime: timeOfCurrentLine.Sub(tables[clientsNumberOfTables[currentLine[2]]].timeStart).Hours(),
+				profit:    ProfitOfTables[IDTable].profit + int(math.Ceil(timeOfCurrentLine.Sub(tables[IDTable].timeStart).Hours()))*price,
+				wholeTime: ProfitOfTables[IDTable].wholeTime + timeOfCurrentLine.Sub(tables[IDTable].timeStart).Hours(),
 			}
 
-			ProfitOfTables[clientsNumberOfTables[currentLine[2]]] = finalProfit
+			ProfitOfTables[IDTable] = finalProfit
 
 			if len(que) > 0 {
 				que[len(que)-1] = que[0]
@@ -180,9 +249,10 @@ func Parse(file string) string {
 					busy:      true,
 				}
 
-				tables[clientsNumberOfTables[currentLine[2]]] = table
-				builder.WriteString(fmt.Sprintf("%v %v %v %v\r\n", currentLine[0], "12", que[len(que)-1],
-					clientsNumberOfTables[currentLine[2]]))
+				tables[IDTable] = table
+				builder.WriteString(fmt.Sprintf("%v %v %v %v\r\n", currentLine[0], "12", table.client,
+					IDTable))
+				clientsNumberOfTables[table.client] = IDTable
 				que = que[:len(que)-1]
 				continue
 			}
@@ -193,46 +263,10 @@ func Parse(file string) string {
 				busy:      false,
 			}
 
-			tables[clientsNumberOfTables[currentLine[2]]] = table
+			tables[IDTable] = table
 		}
 
 	}
 
-	clientRemainsInClub := 0
-	RemainsClients := []Clients{}
-	for client, isInTheClub := range isClientInTheClub {
-		if isInTheClub {
-			finalProfit := FinalProfit{
-				profit:    ProfitOfTables[clientsNumberOfTables[client]].profit + int(math.Ceil(closeTime.Sub(tables[clientsNumberOfTables[client]].timeStart).Hours()))*price,
-				wholeTime: closeTime.Sub(tables[clientsNumberOfTables[client]].timeStart).Hours(),
-			}
-			ProfitOfTables[clientsNumberOfTables[client]] = finalProfit
-
-			RemainsClients = append(RemainsClients, Clients{clientRemainsInClub, client})
-			clientRemainsInClub++
-		}
-	}
-
-	sort.Slice(RemainsClients, func(i, j int) bool {
-		return RemainsClients[i].name < RemainsClients[j].name
-	})
-
-	for nameOfRemainClient := range RemainsClients {
-		builder.WriteString(fmt.Sprintf("%v %v %v\r\n", closeTime.Format("15:04"), "11",
-			RemainsClients[nameOfRemainClient].name))
-	}
-
-	builder.WriteString(fmt.Sprintf("%v\r\n", closeTime.Format("15:04")))
-
-	for key, value := range ProfitOfTables {
-		builder.WriteString(fmt.Sprintf("%v %v %v \r\n", key, value.profit, outputTime(value.wholeTime)))
-	}
-
-	return builder.String()
-}
-
-func outputTime(input float64) string {
-	hours := int(input)
-	minutes := int(math.Round((input - float64(hours)) * 60))
-	return fmt.Sprintf("%02d:%02d", hours, minutes)
+	return isClientInTheClub, clientsNumberOfTables, tables, ProfitOfTables
 }
