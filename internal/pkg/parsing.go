@@ -142,7 +142,7 @@ func makingOutputFromThirdLine(lines []string, builder *strings.Builder, numberO
 		if i != len(lines)-1 {
 			nextLine := strings.Split(lines[i+1], " ")
 			timeOfNextLine, _ = time.Parse("15:04", nextLine[0])
-			if !timeOfCurrentLine.Before(timeOfNextLine) {
+			if !timeOfCurrentLine.Before(timeOfNextLine) && !timeOfCurrentLine.Equal(timeOfNextLine) {
 				log.Printf("%s %s\r\n", BadFormatOfLine, lines[i+1])
 				os.Exit(1)
 			}
@@ -242,15 +242,17 @@ func makingOutputFromThirdLine(lines []string, builder *strings.Builder, numberO
 			ProfitOfTables[IDTable] = finalProfit
 
 			if len(que) > 0 {
-				que[len(que)-1] = que[0]
+				firstInQue := que[0]
+				que[0] = que[len(que)-1]
+				que[len(que)-1] = firstInQue
 				table := SpotOfTable{
-					client:    que[len(que)-1],
+					client:    firstInQue,
 					timeStart: timeOfCurrentLine,
 					busy:      true,
 				}
 
 				tables[IDTable] = table
-				builder.WriteString(fmt.Sprintf("%v %v %v %v\r\n", currentLine[0], "12", table.client,
+				builder.WriteString(fmt.Sprintf("%v %v %v %v\r\n", currentLine[0], "12", firstInQue,
 					IDTable))
 				clientsNumberOfTables[table.client] = IDTable
 				que = que[:len(que)-1]
