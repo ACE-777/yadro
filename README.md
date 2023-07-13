@@ -1,6 +1,7 @@
 # запуск
+Запуск осуществляется из корня репозитория
 ```
-cd .\cmd\yadro\ | go run main.go test_file_1.txt
+cd .\cmd\yadro\ | go run main.go testFiles\test_file_1.txt
 ```
 # docker build
 Собрать контейнер:
