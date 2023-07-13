@@ -29,7 +29,8 @@ type FinalProfit struct {
 }
 
 func Parse(file string) string {
-	dataOfFile, err := os.ReadFile("internal/pkg/testFile/" + file)
+	//dataOfFile, err := os.ReadFile("internal/pkg/testFile/" + file)
+	dataOfFile, err := os.ReadFile(file)
 	if err != nil {
 		log.Println(err)
 		os.Exit(1)
@@ -102,7 +103,7 @@ func sortingProfitInfo(ProfitOfTables map[string]FinalProfit, builder *strings.B
 			break
 		}
 
-		builder.WriteString(fmt.Sprintf("%v %v %v \r\n", finalProfitArray[k].IDOfTable,
+		builder.WriteString(fmt.Sprintf("%v %v %v\r\n", finalProfitArray[k].IDOfTable,
 			finalProfitArray[k].profit, outputTime(finalProfitArray[k].wholeTime)))
 	}
 
