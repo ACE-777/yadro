@@ -2,7 +2,6 @@ package pkg
 
 import (
 	"fmt"
-	"log"
 	"math"
 	"os"
 	"sort"
@@ -28,24 +27,29 @@ type FinalProfit struct {
 	IDOfTable int
 }
 
-func Parse(file string) string {
+func Parse(file string) (string, error) {
 	dataOfFile, err := os.ReadFile(file)
 	if err != nil {
-		log.Println(err)
-		os.Exit(1)
+		return "", err
+		//log.Println(err)
+		//os.Exit(1)
 	}
 
 	lines, numberOfTables, openTime, closeTime, price, InvalidLine, err := checkDataOfFirstThreeLinesInFile(string(dataOfFile))
 	if err != nil {
-		log.Printf("%v %v\r\n", err, InvalidLine)
-		os.Exit(1)
+		return InvalidLine, err
+		//log.Printf("%v %v\r\n", err, InvalidLine)
+		//os.Exit(1)
 	}
 
 	builder := strings.Builder{}
 	builder.WriteString(fmt.Sprintf("%v\r\n", openTime.Format("15:04")))
 
-	isClientInTheClub, clientsNumberOfTables, tables, ProfitOfTables :=
+	isClientInTheClub, clientsNumberOfTables, tables, ProfitOfTables, invalidLine, err :=
 		makingOutputFromThirdLine(lines, &builder, numberOfTables, openTime, price)
+	if err != nil {
+		return invalidLine, err
+	}
 
 	clientRemainsInClub := 0
 	RemainsClients := []Clients{}
@@ -75,7 +79,7 @@ func Parse(file string) string {
 
 	builder = sortingProfitInfo(ProfitOfTables, &builder)
 
-	return builder.String()
+	return builder.String(), nil
 }
 
 func outputTime(input float64) string {
@@ -109,7 +113,7 @@ func sortingProfitInfo(ProfitOfTables map[string]FinalProfit, builder *strings.B
 	return *builder
 }
 
-func makingOutputFromThirdLine(lines []string, builder *strings.Builder, numberOfTables int, openTime time.Time, price int) (map[string]bool, map[string]string, map[string]SpotOfTable, map[string]FinalProfit) {
+func makingOutputFromThirdLine(lines []string, builder *strings.Builder, numberOfTables int, openTime time.Time, price int) (map[string]bool, map[string]string, map[string]SpotOfTable, map[string]FinalProfit, string, error) {
 	var (
 		isClientInTheClub     map[string]bool
 		clientsNumberOfTables map[string]string
@@ -134,8 +138,9 @@ func makingOutputFromThirdLine(lines []string, builder *strings.Builder, numberO
 
 		currentLine := strings.Split(lines[i], " ")
 		if !checkEvent(currentLine, numberOfTables) {
-			log.Printf("%s %s\r\n", BadFormatOfLine, lines[i])
-			os.Exit(1)
+			return isClientInTheClub, clientsNumberOfTables, tables, ProfitOfTables, lines[i], BadFormatOfLine
+			//log.Printf("%s %s\r\n", BadFormatOfLine, lines[i])
+			//os.Exit(1)
 		}
 
 		timeOfCurrentLine, _ = time.Parse("15:04", currentLine[0])
@@ -143,8 +148,9 @@ func makingOutputFromThirdLine(lines []string, builder *strings.Builder, numberO
 			nextLine := strings.Split(lines[i+1], " ")
 			timeOfNextLine, _ = time.Parse("15:04", nextLine[0])
 			if !timeOfCurrentLine.Before(timeOfNextLine) && !timeOfCurrentLine.Equal(timeOfNextLine) {
-				log.Printf("%s %s\r\n", BadFormatOfLine, lines[i+1])
-				os.Exit(1)
+				return isClientInTheClub, clientsNumberOfTables, tables, ProfitOfTables, lines[i], BadFormatOfLine
+				//log.Printf("%s %s\r\n", BadFormatOfLine, lines[i+1])
+				//os.Exit(1)
 			}
 		}
 
@@ -270,5 +276,5 @@ func makingOutputFromThirdLine(lines []string, builder *strings.Builder, numberO
 
 	}
 
-	return isClientInTheClub, clientsNumberOfTables, tables, ProfitOfTables
+	return isClientInTheClub, clientsNumberOfTables, tables, ProfitOfTables, "", nil
 }
