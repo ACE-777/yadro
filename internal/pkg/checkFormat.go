@@ -57,7 +57,7 @@ func checkEvent(line []string, numberOfTables int) bool {
 func checkDataOfFirstThreeLinesInFile(dataOfFile string) ([]string, int, time.Time, time.Time, int, string, error) {
 	lines := strings.Split(dataOfFile, "\r\n") //windows&linux
 	if len(lines) < 3 {
-		return nil, 0, time.Time{}, time.Time{}, 0, "", invalidNumberOfLines
+		return nil, 0, time.Time{}, time.Time{}, 0, "", InvalidNumberOfLines
 	}
 
 	numberOfTables, err := strconv.Atoi(lines[0])
