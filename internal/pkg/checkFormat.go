@@ -79,8 +79,15 @@ func checkDataOfFirstThreeLinesInFile(dataOfFile string) ([]string, int, time.Ti
 		return nil, 0, time.Time{}, time.Time{}, 0, lines[2], BadFormatOfLine
 	}
 
-	openTime, _ := time.Parse("15:04", secondLine[0])
-	closeTime, _ := time.Parse("15:04", secondLine[1])
+	openTime, err := time.Parse("15:04", secondLine[0])
+	if err != nil {
+		return lines, numberOfTables, time.Time{}, time.Time{}, price, "", err
+	}
+
+	closeTime, err := time.Parse("15:04", secondLine[1])
+	if err != nil {
+		return lines, numberOfTables, time.Time{}, time.Time{}, price, "", err
+	}
 
 	return lines, numberOfTables, openTime, closeTime, price, "", nil
 }

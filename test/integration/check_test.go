@@ -28,13 +28,12 @@ func TestCheckApp(t *testing.T) {
 		{
 			ID:         "Test 3",
 			checkFiles: "test_file_2.xt",
-			err:        errors.New("  open test_file_2.xt: The system cannot find the file specified.\r\nopen test_file_2.xt: The system cannot find the file specified.\r\n"),
+			err:        errors.New("open test_file_2.xt: The system cannot find the file specified.\r\n"),
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.ID, func(t *testing.T) {
-			// Переопределение os.Args
 			os.Args = append([]string{"program_name"}, test.checkFiles)
 			actual, err := pkg.Parse(test.checkFiles)
 			if err != nil {

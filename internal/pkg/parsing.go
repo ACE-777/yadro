@@ -17,29 +17,25 @@ type SpotOfTable struct {
 }
 
 type Clients struct {
-	ID   int
+	id   int
 	name string
 }
 
 type FinalProfit struct {
 	wholeTime float64
 	profit    int
-	IDOfTable int
+	idOfTable int
 }
 
 func Parse(file string) (string, error) {
 	dataOfFile, err := os.ReadFile(file)
 	if err != nil {
 		return "", err
-		//log.Println(err)
-		//os.Exit(1)
 	}
 
 	lines, numberOfTables, openTime, closeTime, price, InvalidLine, err := checkDataOfFirstThreeLinesInFile(string(dataOfFile))
 	if err != nil {
 		return InvalidLine, err
-		//log.Printf("%v %v\r\n", err, InvalidLine)
-		//os.Exit(1)
 	}
 
 	builder := strings.Builder{}
@@ -52,18 +48,21 @@ func Parse(file string) (string, error) {
 	}
 
 	clientRemainsInClub := 0
-	RemainsClients := []Clients{}
+	RemainsClients := make([]Clients, 0, len(isClientInTheClub))
 	for client, isInTheClub := range isClientInTheClub {
-		if isInTheClub {
-			finalProfit := FinalProfit{
-				profit:    ProfitOfTables[clientsNumberOfTables[client]].profit + int(math.Ceil(closeTime.Sub(tables[clientsNumberOfTables[client]].timeStart).Hours()))*price,
-				wholeTime: ProfitOfTables[clientsNumberOfTables[client]].wholeTime + closeTime.Sub(tables[clientsNumberOfTables[client]].timeStart).Hours(),
-			}
-			ProfitOfTables[clientsNumberOfTables[client]] = finalProfit
-
-			RemainsClients = append(RemainsClients, Clients{clientRemainsInClub, client})
-			clientRemainsInClub++
+		if !isInTheClub {
+			continue
 		}
+
+		finalProfit := FinalProfit{
+			profit:    ProfitOfTables[clientsNumberOfTables[client]].profit + int(math.Ceil(closeTime.Sub(tables[clientsNumberOfTables[client]].timeStart).Hours()))*price,
+			wholeTime: ProfitOfTables[clientsNumberOfTables[client]].wholeTime + closeTime.Sub(tables[clientsNumberOfTables[client]].timeStart).Hours(),
+		}
+		ProfitOfTables[clientsNumberOfTables[client]] = finalProfit
+
+		RemainsClients = append(RemainsClients, Clients{clientRemainsInClub, client})
+		clientRemainsInClub++
+
 	}
 
 	sort.Slice(RemainsClients, func(i, j int) bool {
@@ -96,17 +95,17 @@ func sortingProfitInfo(ProfitOfTables map[string]FinalProfit, builder *strings.B
 	}
 
 	sort.Slice(finalProfitArray, func(i, j int) bool {
-		return finalProfitArray[i].IDOfTable < finalProfitArray[j].IDOfTable
+		return finalProfitArray[i].idOfTable < finalProfitArray[j].idOfTable
 	})
 
 	for k := range finalProfitArray {
 		if k == len(finalProfitArray)-1 {
-			builder.WriteString(fmt.Sprintf("%v %v %v", finalProfitArray[k].IDOfTable,
+			builder.WriteString(fmt.Sprintf("%v %v %v", finalProfitArray[k].idOfTable,
 				finalProfitArray[k].profit, outputTime(finalProfitArray[k].wholeTime)))
 			break
 		}
 
-		builder.WriteString(fmt.Sprintf("%v %v %v\r\n", finalProfitArray[k].IDOfTable,
+		builder.WriteString(fmt.Sprintf("%v %v %v\r\n", finalProfitArray[k].idOfTable,
 			finalProfitArray[k].profit, outputTime(finalProfitArray[k].wholeTime)))
 	}
 
@@ -128,7 +127,7 @@ func makingOutputFromThirdLine(lines []string, builder *strings.Builder, numberO
 	clientsNumberOfTables = make(map[string]string)
 	ProfitOfTables = make(map[string]FinalProfit)
 
-	que = make([]string, 0)
+	que = make([]string, 0, len(lines))
 
 	for i := 3; i < len(lines); i++ {
 		var (
@@ -139,8 +138,6 @@ func makingOutputFromThirdLine(lines []string, builder *strings.Builder, numberO
 		currentLine := strings.Split(lines[i], " ")
 		if !checkEvent(currentLine, numberOfTables) {
 			return isClientInTheClub, clientsNumberOfTables, tables, ProfitOfTables, lines[i], BadFormatOfLine
-			//log.Printf("%s %s\r\n", BadFormatOfLine, lines[i])
-			//os.Exit(1)
 		}
 
 		timeOfCurrentLine, _ = time.Parse("15:04", currentLine[0])
@@ -149,8 +146,6 @@ func makingOutputFromThirdLine(lines []string, builder *strings.Builder, numberO
 			timeOfNextLine, _ = time.Parse("15:04", nextLine[0])
 			if !timeOfCurrentLine.Before(timeOfNextLine) && !timeOfCurrentLine.Equal(timeOfNextLine) {
 				return isClientInTheClub, clientsNumberOfTables, tables, ProfitOfTables, lines[i], BadFormatOfLine
-				//log.Printf("%s %s\r\n", BadFormatOfLine, lines[i+1])
-				//os.Exit(1)
 			}
 		}
 
@@ -250,7 +245,6 @@ func makingOutputFromThirdLine(lines []string, builder *strings.Builder, numberO
 			if len(que) > 0 {
 				firstInQue := que[0]
 				que[0] = que[len(que)-1]
-				que[len(que)-1] = firstInQue
 				table := SpotOfTable{
 					client:    firstInQue,
 					timeStart: timeOfCurrentLine,
