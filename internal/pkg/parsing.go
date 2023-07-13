@@ -29,7 +29,6 @@ type FinalProfit struct {
 }
 
 func Parse(file string) string {
-	//dataOfFile, err := os.ReadFile("internal/pkg/testFile/" + file)
 	dataOfFile, err := os.ReadFile(file)
 	if err != nil {
 		log.Println(err)

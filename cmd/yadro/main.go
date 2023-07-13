@@ -7,6 +7,6 @@ import (
 )
 
 func main() {
-	//fmt.Println(pkg.Parse(pkg.CheckArgs()))
-	fmt.Println(pkg.Parse("test_file.txt"))
+
+	fmt.Println(pkg.Parse(pkg.CheckArgs()))
 }
